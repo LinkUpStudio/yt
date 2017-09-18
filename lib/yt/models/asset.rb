@@ -96,6 +96,8 @@ module Yt
       #   status == 'pending'
       # end
 
+      has_many :asset_relationships
+
     private
 
       # @see https://developers.google.com/youtube/partner/docs/v1/assets/patch
