@@ -23,7 +23,7 @@ channel.videos.count #=> 12
 ```
 
 ```ruby
-video = Yt::Video.new id: 'MESycYJytkU'
+video = Yt::Video.new id: 'jNQXAC9IVRw'
 video.title #=> "Fullscreen Creator Platform"
 video.comment_count #=> 308
 video.hd? #=> true
@@ -44,7 +44,7 @@ To install on your system, run
 
 To use inside a bundled Ruby project, add this line to the Gemfile:
 
-    gem 'yt', '~> 0.25.5'
+    gem 'yt', '~> 0.28.0'
 
 Since the gem follows [Semantic Versioning](http://semver.org),
 indicating the full version in your Gemfile (~> *major*.*minor*.*patch*)
@@ -83,7 +83,7 @@ content_owner.partnered_channels.where(part: 'statistics').map &:subscriber_coun
 
 content_owner.claims.where(q: 'Fullscreen').count #=> 24
 content_owner.claims.first #=> #<Yt::Models::Claim @id=...>
-content_owner.claims.first.video_id #=> 'MESycYJytkU'
+content_owner.claims.first.video_id #=> 'jNQXAC9IVRw'
 content_owner.claims.first.status #=> "active"
 
 reference = content_owner.references.where(asset_id: "ABCDEFG").first #=> #<Yt::Models::Reference @id=...>
@@ -166,6 +166,37 @@ comment.updated_at #=> 2016-03-22 12:56:56 UTC
 comment.parent_id #=> "abc1234" (return nil if the comment is not a reply)
 ```
 
+Yt::BulkReportJob
+----------------
+
+Use [Yt::BulkReportJob](http://www.rubydoc.info/gems/yt/Yt/Models/BulkReportJob) to:
+
+* Get details of a bulk report job.
+
+```ruby
+content_owner = Yt::ContentOwner.new owner_name: 'CMSname', access_token: 'ya29.1.ABCDEFGHIJ'
+bulk_report_job = content_owner.bulk_report_jobs.first
+
+bulk_report_job.report_type_id #=> "content_owner_demographics_a1"
+```
+
+Yt::BulkReport
+----------------
+
+Use [Yt::BulkReport](http://www.rubydoc.info/gems/yt/Yt/Models/BulkReport) to:
+
+* Get details of a bulk report.
+
+```ruby
+content_owner = Yt::ContentOwner.new owner_name: 'CMSname', access_token: 'ya29.1.ABCDEFGHIJ'
+bulk_report_job = content_owner.bulk_report_jobs.first
+bulk_report = bulk_report_job.bulk_reports.first
+
+bulk_report.start_time #=> 2017-08-11 07:00:00 UTC
+bulk_report.end_time #=> 2017-08-12 07:00:00 UTC
+bulk_report.download_url #=> "https://youtubereporting.googleapis.com/v1/..."
+```
+
 Yt::Collections::Videos
 -----------------------
 
@@ -178,7 +209,7 @@ videos = Yt::Collections::Videos.new
 videos.where(order: 'viewCount').first.title #=>  "PSY - GANGNAM STYLE"
 videos.where(q: 'Fullscreen CreatorPlatform', safe_search: 'none').size #=> 324
 videos.where(chart: 'mostPopular', video_category_id: 44).first.title #=> "SINISTER - Trailer"
-videos.where(id: 'MESycYJytkU,invalid').map(&:title) #=> ["Fullscreen Creator Platform"]
+videos.where(id: 'jNQXAC9IVRw,invalid').map(&:title) #=> ["Fullscreen Creator Platform"]
 ```
 
 *The methods above do not require authentication.*
@@ -293,7 +324,7 @@ Use [Yt::AdvertisingOptionsSet](http://www.rubydoc.info/gems/yt/Yt/Models/Advert
 
 ```ruby
 content_owner = Yt::ContentOwner.new owner_name: 'CMSname', access_token: 'ya29.1.ABCDEFGHIJ'
-ad_options = Yt::AdvertisingOptionsSet.new video_id: 'MESycYJytkU', auth: $content_owner
+ad_options = Yt::AdvertisingOptionsSet.new video_id: 'jNQXAC9IVRw', auth: $content_owner
 ad_options.update ad_formats: %w(standard_instream long) #=> true
 ```
 

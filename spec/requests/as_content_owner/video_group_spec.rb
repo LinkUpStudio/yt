@@ -15,6 +15,11 @@ describe Yt::VideoGroup, :partner do
         expect(video.instance_variable_defined? :@status).to be true
         expect(video.instance_variable_defined? :@statistics_set).to be true
       end
+
+      specify '.channels loads each channel' do
+        channel = video_group.channels.first
+        expect(channel.instance_variable_defined? :@snippet).to be true
+      end
     end
   end
 
@@ -51,16 +56,24 @@ describe Yt::VideoGroup, :partner do
         expect(video.instance_variable_defined? :@statistics_set).to be true
       end
 
+      specify '.channels loads each channel' do
+        channel = video_group.channels.first
+        expect(channel.instance_variable_defined? :@snippet).to be true
+      end
+
       describe 'multiple reports can be retrieved at once' do
-        metrics = {views: Integer, uniques: Integer,
+        metrics = {views: Integer,
           estimated_minutes_watched: Integer, comments: Integer, likes: Integer,
           dislikes: Integer, shares: Integer, subscribers_gained: Integer,
-          subscribers_lost: Integer, favorites_added: Integer,
+          subscribers_lost: Integer,
           videos_added_to_playlists: Integer, videos_removed_from_playlists: Integer,
-          favorites_removed: Integer, average_view_duration: Integer,
+          average_view_duration: Integer,
+          card_impressions: Integer, card_clicks: Integer,
+          card_click_rate: Float, card_teaser_impressions: Integer,
+          card_teaser_clicks: Integer, card_teaser_click_rate: Float,
           average_view_percentage: Float, annotation_clicks: Integer,
           annotation_click_through_rate: Float,
-          annotation_close_rate: Float, earnings: Float, impressions: Integer,
+          annotation_close_rate: Float, estimated_revenue: Float, ad_impressions: Integer,
           monetized_playbacks: Integer}
 
         specify 'by day, and are chronologically sorted' do

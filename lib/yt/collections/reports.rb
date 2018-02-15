@@ -11,6 +11,7 @@ module Yt
         hash[:traffic_source] = {name: 'insightTrafficSourceType', parse: ->(source, *values) { @metrics.keys.zip(values.map{|v| {TRAFFIC_SOURCES.key(source) => v}}).to_h} }
         hash[:playback_location] = {name: 'insightPlaybackLocationType', parse: ->(location, *values) { @metrics.keys.zip(values.map{|v| {PLAYBACK_LOCATIONS.key(location) => v}}).to_h} }
         hash[:embedded_player_location] = {name: 'insightPlaybackLocationDetail', parse: ->(url, *values) {@metrics.keys.zip(values.map{|v| {url => v}}).to_h} }
+        hash[:subscribed_status] = {name: 'subscribedStatus', parse: ->(status, *values) {@metrics.keys.zip(values.map{|v| {SUBSCRIBED_STATUSES.key(status) => v}}).to_h} }
         hash[:related_video] = {name: 'insightTrafficSourceDetail', parse: ->(video_id, *values) { @metrics.keys.zip(values.map{|v| {video_id => v}}).to_h} }
         hash[:search_term] = {name: 'insightTrafficSourceDetail', parse: ->(search_term, *values) {@metrics.keys.zip(values.map{|v| {search_term => v}}).to_h} }
         hash[:referrer] = {name: 'insightTrafficSourceDetail', parse: ->(url, *values) {@metrics.keys.zip(values.map{|v| {url => v}}).to_h} }
@@ -18,6 +19,7 @@ module Yt
         hash[:playlist] = {name: 'playlist', parse: ->(playlist_id, *values) { @metrics.keys.zip(values.map{|v| {playlist_id => v}}).to_h} }
         hash[:device_type] = {name: 'deviceType', parse: ->(type, *values) {@metrics.keys.zip(values.map{|v| {DEVICE_TYPES.key(type) => v}}).to_h} }
         hash[:operating_system] = {name: 'operatingSystem', parse: ->(os, *values) {@metrics.keys.zip(values.map{|v| {OPERATING_SYSTEMS.key(os) => v}}).to_h} }
+        hash[:youtube_product] = {name: 'youtubeProduct', parse: ->(product, *values) {@metrics.keys.zip(values.map{|v| {YOUTUBE_PRODUCTS.key(product) => v}}).to_h} }
         hash[:country] = {name: 'country', parse: ->(country_code, *values) { @metrics.keys.zip(values.map{|v| {country_code => v}}).to_h} }
         hash[:state] = {name: 'province', parse: ->(country_and_state_code, *values) { @metrics.keys.zip(values.map{|v| {country_and_state_code[3..-1] => v}}).to_h} }
         hash[:gender_age_group] = {name: 'gender,ageGroup', parse: ->(gender, *values) { [gender.downcase.to_sym, *values] }}
@@ -44,6 +46,8 @@ module Yt
         google: 'GOOGLE_SEARCH',
         notification: 'NOTIFICATION',
         playlist_page: 'YT_PLAYLIST_PAGE',
+        campaign_card: 'CAMPAIGN_CARD',
+        end_screen: 'END_SCREEN',
         info_card: 'INFO_CARD'
       }
 
@@ -57,6 +61,20 @@ module Yt
         search: 'SEARCH', # undocumented but returned by the API
         browse: 'BROWSE', # undocumented but returned by the API
         mobile: 'MOBILE' # only present for data < September 10, 2013
+      }
+
+      # @see https://developers.google.com/youtube/analytics/v1/dimsmets/dims#Playback_Detail_Dimensions
+      SUBSCRIBED_STATUSES = {
+        subscribed: 'SUBSCRIBED',
+        unsubscribed: 'UNSUBSCRIBED'
+      }
+
+      # @see https://developers.google.com/youtube/analytics/v1/dimsmets/dims#youtubeProduct
+      YOUTUBE_PRODUCTS = {
+        core: 'CORE',
+        gaming: 'GAMING',
+        kids: 'KIDS',
+        unknown: 'UNKNOWN'
       }
 
       # @see https://developers.google.com/youtube/analytics/v1/dimsmets/dims#Device_Dimensions
@@ -76,6 +94,7 @@ module Yt
         blackberry: 'BLACKBERRY',
         chromecast: 'CHROMECAST',
         docomo: 'DOCOMO',
+        firefox: 'FIREFOX',
         hiptop: 'HIPTOP',
         ios: 'IOS',
         linux: 'LINUX',
@@ -85,8 +104,10 @@ module Yt
         other: 'OTHER',
         playstation: 'PLAYSTATION',
         playstation_vita: 'PLAYSTATION_VITA',
+        realmedia: 'REALMEDIA',
         smart_tv: 'SMART_TV',
         symbian: 'SYMBIAN',
+        tizen: 'TIZEN',
         webos: 'WEBOS',
         wii: 'WII',
         windows: 'WINDOWS',
@@ -96,12 +117,13 @@ module Yt
 
       attr_writer :metrics
 
-      def within(days_range, country, state, dimension, videos, try_again = true)
+      def within(days_range, country, state, dimension, videos, historical, max_retries = 3)
         @days_range = days_range
-        @dimension = dimension
         @country = country
         @state = state
+        @dimension = dimension
         @videos = videos
+        @historical = historical
         if dimension == :gender_age_group # array of array
           Hash.new{|h,k| h[k] = Hash.new 0.0}.tap do |hash|
             each{|gender, age_group, value| hash[gender][age_group[3..-1]] = value}
@@ -124,10 +146,10 @@ module Yt
             end
           elsif dimension == :day
             hash = hash.transform_values{|h| h.sort_by{|day, v| day}.to_h}
-          elsif dimension.in? [:traffic_source, :country, :state, :playback_location, :device_type, :operating_system]
+          elsif dimension.in? [:traffic_source, :country, :state, :playback_location, :device_type, :operating_system, :subscribed_status]
             hash = hash.transform_values{|h| h.sort_by{|range, v| -v}.to_h}
           end
-          (@metrics.one? || @metrics.keys == [:earnings, :estimated_minutes_watched]) ? hash[@metrics.keys.first] : hash
+          (@metrics.one? || @metrics.keys == [:estimated_revenue, :estimated_minutes_watched]) ? hash[@metrics.keys.first] : hash
         end
       # NOTE: Once in a while, YouTube responds with 400 Error and the message
       # "Invalid query. Query did not conform to the expectations."; in this
@@ -136,7 +158,7 @@ module Yt
       # same query is a workaround that works and can hardly cause any damage.
       # Similarly, once in while YouTube responds with a random 503 error.
       rescue Yt::Error => e
-        try_again && rescue?(e) ? sleep(3) && within(days_range, country, state, dimension, videos, false) : raise
+        (max_retries > 0) && rescue?(e) ? sleep(3) && within(days_range, country, state, dimension, videos, historical, max_retries - 1) : raise
       end
 
     private
@@ -167,11 +189,12 @@ module Yt
           params['end-date'] = @days_range.end
           params['metrics'] = @metrics.keys.join(',').to_s.camelize(:lower)
           params['dimensions'] = DIMENSIONS[@dimension][:name] unless @dimension == :range
+          params['include-historical-channel-data'] = @historical if @historical
           params['max-results'] = 50 if @dimension.in? [:playlist, :video]
           params['max-results'] = 25 if @dimension.in? [:embedded_player_location, :related_video, :search_term, :referrer]
           if @dimension.in? [:video, :playlist, :embedded_player_location, :related_video, :search_term, :referrer]
-            if @metrics.keys == [:earnings, :estimated_minutes_watched]
-              params['sort'] = '-earnings'
+            if @metrics.keys == [:estimated_revenue, :estimated_minutes_watched]
+              params['sort'] = '-estimatedRevenue'
             else
               params['sort'] = "-#{@metrics.keys.join(',').to_s.camelize(:lower)}"
             end

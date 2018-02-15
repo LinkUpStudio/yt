@@ -37,6 +37,11 @@ module Yt
       #   @return [String] the title of the channel that the video belongs to.
       delegate :channel_title, to: :snippet
 
+      # @return [<String>] the URL of the channel that the video belongs to.
+      def channel_url
+        "https://www.youtube.com/channel/#{channel_id}"
+      end
+
       # @!attribute [r] live_broadcast_content
       #   @return [String] the type of live broadcast that the video contains.
       #     Possible values are: +'live'+, +'none'+, +'upcoming'+.
@@ -226,6 +231,10 @@ module Yt
       #   @return [Integer] the duration of the video (in seconds).
       delegate :duration, to: :content_detail
 
+      # @!attribute [r] duration
+      #   @return [String] the length of the video as an ISO 8601 time, HH:MM:SS.
+      delegate :length, to: :content_detail
+
       # @return [Boolean] whether the video is available in 3D.
       def stereoscopic?
         content_detail.dimension == '3d'
@@ -393,9 +402,6 @@ module Yt
       # @macro report_by_video_dimensions
       has_report :views, Integer
 
-      # @macro report_by_day
-      has_report :uniques, Integer
-
       # @macro report_by_video_dimensions
       has_report :estimated_minutes_watched, Integer
 
@@ -425,12 +431,6 @@ module Yt
       has_report :subscribers_lost, Integer
 
       # @macro report_by_day_and_country
-      has_report :favorites_added, Integer
-
-      # @macro report_by_day_and_country
-      has_report :favorites_removed, Integer
-
-      # @macro report_by_day_and_country
       has_report :videos_added_to_playlists, Integer
 
       # @macro report_by_day_and_country
@@ -451,11 +451,29 @@ module Yt
       # @macro report_by_day_and_state
       has_report :annotation_close_rate, Float
 
-      # @macro report_by_day_and_country
-      has_report :earnings, Float
+      # @macro report_by_day_and_state
+      has_report :card_impressions, Integer
+
+      # @macro report_by_day_and_state
+      has_report :card_clicks, Integer
+
+      # @macro report_by_day_and_state
+      has_report :card_click_rate, Float
+
+      # @macro report_by_day_and_state
+      has_report :card_teaser_impressions, Integer
+
+      # @macro report_by_day_and_state
+      has_report :card_teaser_clicks, Integer
+
+      # @macro report_by_day_and_state
+      has_report :card_teaser_click_rate, Float
 
       # @macro report_by_day_and_country
-      has_report :impressions, Integer
+      has_report :estimated_revenue, Float
+
+      # @macro report_by_day_and_country
+      has_report :ad_impressions, Integer
 
       # @macro report_by_day_and_country
       has_report :monetized_playbacks, Integer

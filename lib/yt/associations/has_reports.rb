@@ -206,18 +206,17 @@ module Yt
       #   @macro report
       #   @macro report_with_country_and_state
 
-      # Defines two public instance methods to access the reports of a
+      # Defines a public instance methods to access the reports of a
       # resource for a specific metric.
       # @param [Symbol] metric the metric to access the reports of.
       # @param [Class] type The class to cast the returned values to.
-      # @example Adds +comments+ and +comments_on+ on a Channel resource.
+      # @example Adds +comments+ on a Channel resource.
       #   class Channel < Resource
       #     has_report :comments, Integer
       #   end
       def has_report(metric, type)
         require 'yt/collections/reports'
 
-        define_metric_on_method metric
         define_metric_method metric
         define_reports_method metric, type
         define_range_metric_method metric
@@ -225,12 +224,6 @@ module Yt
       end
 
     private
-
-      def define_metric_on_method(metric)
-        define_method "#{metric}_on" do |date|
-          send(metric, from: date, to: date, by: :day).values.first
-        end
-      end
 
       def define_reports_method(metric, type)
         (@metrics ||= {})[metric] = type
@@ -242,6 +235,7 @@ module Yt
           state = location[:state] if location.is_a?(Hash)
           dimension = options[:by] || (metric == :viewer_percentage ? :gender_age_group : :range)
           videos = options[:videos]
+          historical = options[:historical].to_s if [true, false].include?(options[:historical])
           if dimension == :month
             from = from.to_date.beginning_of_month
             to = to.to_date.beginning_of_month
@@ -250,9 +244,9 @@ module Yt
 
           only = options.fetch :only, []
           reports = Collections::Reports.of(self).tap do |reports|
-            reports.metrics =  self.class.instance_variable_get(:@metrics).select{|k, v| k.in? only}
+            reports.metrics = self.class.instance_variable_get(:@metrics).select{|k, v| k.in? only}
           end
-          reports.within date_range, country, state, dimension, videos
+          reports.within date_range, country, state, dimension, videos, historical
         end unless defined?(reports)
       end
 
@@ -265,6 +259,7 @@ module Yt
           state = location[:state] if location.is_a?(Hash)
           dimension = options[:by] || (metric == :viewer_percentage ? :gender_age_group : :range)
           videos = options[:videos]
+          historical = options[:historical].to_s if [true, false].include?(options[:historical])
           if dimension == :month
             from = from.to_date.beginning_of_month
             to = to.to_date.beginning_of_month
@@ -276,10 +271,10 @@ module Yt
           results = case dimension
           when :day
             Hash[*range.flat_map do |date|
-              [date, instance_variable_get("@#{metric}_#{dimension}_#{country}_#{state}")[date] ||= send("range_#{metric}", range, dimension, country, state, videos)[date]]
+              [date, instance_variable_get("@#{metric}_#{dimension}_#{country}_#{state}")[date] ||= send("range_#{metric}", range, dimension, country, state, videos, historical)[date]]
             end]
           else
-            instance_variable_get("@#{metric}_#{dimension}_#{country}_#{state}")[range] ||= send("range_#{metric}", range, dimension, country, state, videos)
+            instance_variable_get("@#{metric}_#{dimension}_#{country}_#{state}")[range] ||= send("range_#{metric}", range, dimension, country, state, videos, historical)
           end
           lookup_class = case options[:by]
             when :video, :related_video then Yt::Collections::Videos
@@ -296,21 +291,21 @@ module Yt
       end
 
       def define_range_metric_method(metric)
-        define_method "range_#{metric}" do |date_range, dimension, country, state, videos|
+        define_method "range_#{metric}" do |date_range, dimension, country, state, videos, historical|
           ivar = instance_variable_get "@range_#{metric}_#{dimension}_#{country}_#{state}"
           instance_variable_set "@range_#{metric}_#{dimension}_#{country}_#{state}", ivar || {}
-          instance_variable_get("@range_#{metric}_#{dimension}_#{country}_#{state}")[date_range] ||= send("all_#{metric}").within date_range, country, state, dimension, videos
+          instance_variable_get("@range_#{metric}_#{dimension}_#{country}_#{state}")[date_range] ||= send("all_#{metric}").within date_range, country, state, dimension, videos, historical
         end
         private "range_#{metric}"
       end
 
       def define_all_metric_method(metric, type)
         define_method "all_#{metric}" do
-          # @note Asking for the "earnings" metric of a day in which a channel
+          # @note Asking for the "estimated_revenue" metric of a day in which a channel
           # made 0 USD returns the wrong "nil". But adding to the request the
           # "estimatedMinutesWatched" metric returns the correct value 0.
           metrics = {metric => type}
-          metrics[:estimated_minutes_watched] = Integer if metric == :earnings
+          metrics[:estimated_minutes_watched] = Integer if metric == :estimated_revenue
           Collections::Reports.of(self).tap{|reports| reports.metrics = metrics}
         end
         private "all_#{metric}"

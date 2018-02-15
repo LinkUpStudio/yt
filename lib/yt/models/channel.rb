@@ -114,9 +114,6 @@ module Yt
       # @macro report_by_channel_dimensions
       has_report :views, Integer
 
-      # @macro report_by_day
-      has_report :uniques, Integer
-
       # @macro report_by_channel_dimensions
       has_report :estimated_minutes_watched, Integer
 
@@ -142,12 +139,6 @@ module Yt
       has_report :subscribers_lost, Integer
 
       # @macro report_by_day_and_country
-      has_report :favorites_added, Integer
-
-      # @macro report_by_day_and_country
-      has_report :favorites_removed, Integer
-
-      # @macro report_by_day_and_country
       has_report :videos_added_to_playlists, Integer
 
       # @macro report_by_day_and_country
@@ -168,11 +159,29 @@ module Yt
       # @macro report_by_day_and_state
       has_report :annotation_close_rate, Float
 
-      # @macro report_by_day_and_country
-      has_report :earnings, Float
+      # @macro report_by_day_and_state
+      has_report :card_impressions, Integer
+
+      # @macro report_by_day_and_state
+      has_report :card_clicks, Integer
+
+      # @macro report_by_day_and_state
+      has_report :card_click_rate, Float
+
+      # @macro report_by_day_and_state
+      has_report :card_teaser_impressions, Integer
+
+      # @macro report_by_day_and_state
+      has_report :card_teaser_clicks, Integer
+
+      # @macro report_by_day_and_state
+      has_report :card_teaser_click_rate, Float
 
       # @macro report_by_day_and_country
-      has_report :impressions, Integer
+      has_report :estimated_revenue, Float
+
+      # @macro report_by_day_and_country
+      has_report :ad_impressions, Integer
 
       # @macro report_by_day_and_country
       has_report :monetized_playbacks, Integer
