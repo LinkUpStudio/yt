@@ -13,7 +13,7 @@ module Yt
       end
 
       def image_url(size = 'bannerImageUrl')
-        image.fetch(size.to_s)
+        image.fetch(size.to_s) if image
       end
 
       has_attribute :image
