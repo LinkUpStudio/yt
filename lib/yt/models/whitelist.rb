@@ -5,7 +5,6 @@ module Yt
 
       def initialize(options = {})
         @data = options.fetch(:data, {})
-        @id = options[:id]
         @auth = options[:auth]
       end
 
@@ -15,6 +14,20 @@ module Yt
 
       # @return [String] The whitelisted YouTube channel's title.
       has_attribute :title
+
+      def delete
+        do_delete
+        self
+      end
+
+      private
+
+      def modify_params
+        super.tap do |params|
+          params[:path] = "/youtube/partner/v1/whitelists/#{id}"
+          params[:params] = { on_behalf_of_content_owner: @auth.owner_name }
+        end
+      end
     end
   end
 end
