@@ -17,7 +17,7 @@ module Yt
 
       def list_params
         super.tap do |params|
-          params[:path] = '/youtube/partner/v1/whitelists'
+          params[:path] = path
           params[:params] = whitelist_params
         end
       end
@@ -28,8 +28,12 @@ module Yt
 
       def insert_params
         super.tap do |params|
-          params[:path] = '/youtube/partner/v1/whitelists'
+          params[:path] = path
         end
+      end
+
+      def path
+        '/youtube/partner/v1/whitelists'
       end
     end
   end
