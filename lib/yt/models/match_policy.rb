@@ -24,6 +24,11 @@ module Yt
       # @see https://developers.google.com/youtube/partner/docs/v1/assetMatchPolicy/patch
       def patch_params
         super.tap do |params|
+          # Request to 'www.googleapis.com' failes with 404
+          # I found that Google API Explorer uses differet API host and it works
+          # So, are we doing this:
+          params[:host] = 'content.googleapis.com'
+
           params[:path] = "/youtube/partner/v1/assets/#{@asset_id}/matchPolicy"
           params[:params] = {on_behalf_of_content_owner: @auth.owner_name}
           params[:expected_response] = Net::HTTPOK
