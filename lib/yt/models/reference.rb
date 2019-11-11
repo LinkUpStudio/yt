@@ -18,8 +18,9 @@ module Yt
       #   Reference to "inactive" can be considered a soft-deletion, since it
       #   allows to successively create new references for the same claim.
       # @return [Boolean] whether the reference is inactive.
-      def delete
+      def delete(release_claims: false)
         body = {id: id, status: :inactive}
+        body = body.merge(releaseClaims: true) if release_claims
         do_update(body: body) {|data| @data = data}
         inactive?
       end
