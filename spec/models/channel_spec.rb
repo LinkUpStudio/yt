@@ -124,4 +124,11 @@ describe Yt::Channel do
       it { expect(channel.status).to be_a Yt::Status }
     end
   end
+
+  describe '#branding_setting' do
+    context 'given fetching a channel returns a branding settings' do
+      let(:attrs) { {branding_settings: {"channel"=>{"title"=>"FullscreenMedia"}}} }
+      it { expect(channel.branding_setting).to be_a Yt::BrandingSetting }
+    end
+  end
 end

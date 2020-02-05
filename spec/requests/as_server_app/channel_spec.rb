@@ -23,6 +23,8 @@ describe Yt::Channel, :server_app do
     it { expect(channel.playlists.first).to be_a Yt::Playlist }
     it { expect(channel.related_playlists).to be_a Yt::Collections::Playlists }
     it { expect(channel.related_playlists.first).to be_a Yt::Playlist }
+    it { expect(channel.branding_settings).to be_a Yt::Collections::BrandingSettings }
+    it { expect(channel.branding_settings.first).to be_a Yt::BrandingSetting }
 
     specify 'with a public list of subscriptions' do
       expect(channel.subscribed_channels.first).to be_a Yt::Channel
