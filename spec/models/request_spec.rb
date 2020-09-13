@@ -7,6 +7,10 @@ describe Yt::Request do
   let(:response) { response_class.new nil, nil, nil }
   let(:response_body) { }
 
+  before do
+    allow(request).to receive(:retry_time).and_return(0)
+  end
+
   describe '#run' do
     context 'given a request that returns' do
       before { allow(response).to receive(:body).and_return response_body }
@@ -62,6 +66,16 @@ describe Yt::Request do
 
         it { expect{request.run}.to fail }
       end
+
+      context 'an error code 401 with a refresh token' do
+        before { expect(Net::HTTP).to receive(:start).at_least(:once).and_return response }
+        let(:auth) { double(refreshed_access_token?: true, access_token: 'whatever') }
+        let(:request) { Yt::Request.new host: 'example.com', auth: auth }
+        let(:response_class) { Net::HTTPUnauthorized }
+
+        it { expect{request.run}.to fail }
+      end
+
 
       context 'any other non-2XX error code' do
         let(:response_class) { Net::HTTPNotFound }

@@ -6,6 +6,33 @@ For more information about changelogs, check
 [Keep a Changelog](http://keepachangelog.com) and
 [Vandamme](http://tech-angels.github.io/vandamme).
 
+## 0.33.0 - 2020-04-10
+
+If your code calls reports methods such as `views`, `likes`, or `reports`,
+do not include `by: :week` option since `7DayTotals` dimension will no longer be
+supported by YouTube API as of [April 15, 2020](https://developers.google.com/youtube/analytics/revision_history#october-15,-2019).
+
+Use `by: :day` option instead and add up the numbers from each day.
+
+If you keep using `by: :week` option after this change it will raise an error
+(before the gem upgrade) or it will run with `day` dimension instead (after
+the gem upgrade, like any other random input).
+
+* [REMOVAL] Remove `by: :week` option for reports.
+* [FEATURE] Add back the option of initializing a resource by its URL.
+* [BUGFIX] Limit retries on refreshing tokens
+
+**Breaking change**
+
+If your code is using constant `Yt::URL::CHANNEL_PATTERNS` etc then it's moved to `Yt::Resource::CHANNEL_PATTERNS`, `Yt::Resource::VIDEO_PATTERNS`, and `Yt::Resource::PLAYLIST_PATTERNS`.
+
+## 0.32.6 - 2020-02-07
+
+* [FEATURE] Allow partnered channels to delete playlist item.
+* [FEATURE] Allow partnered channels to update video.
+* [FEATURE] Allow partnered channels to update playlist.
+* [FEATURE] Allow partnered channels to upload thumbnail.
+* [FEATURE] Allow partnered channels to create playlist item.
 
 ## 0.32.5 - 2019-11-06
 

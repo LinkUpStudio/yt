@@ -192,6 +192,10 @@ module Yt
         {mine: true}
       end
 
+      def playlist_items_params
+        {}
+      end
+
       # @private
       # Tells `has_many :resumable_sessions` what path to hit to upload a file.
       def upload_path
@@ -222,6 +226,22 @@ module Yt
       # Tells `has_many :resumable_sessions` what type of file can be uploaded.
       def upload_content_type
         'video/*'
+      end
+
+      def update_video_params
+        {}
+      end
+
+      def update_playlist_params
+        {}
+      end
+
+      def upload_thumbnail_params
+        {}
+      end
+
+      def insert_playlist_item_params
+        {}
       end
     end
   end

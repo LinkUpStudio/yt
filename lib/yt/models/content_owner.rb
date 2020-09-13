@@ -102,6 +102,26 @@ module Yt
       def video_groups_params
         {on_behalf_of_content_owner: @owner_name}
       end
+
+      def playlist_items_params
+        {on_behalf_of_content_owner: @owner_name}
+      end
+
+      def update_video_params
+        {on_behalf_of_content_owner: @owner_name}
+      end
+
+      def update_playlist_params
+        {on_behalf_of_content_owner: @owner_name}
+      end
+
+      def upload_thumbnail_params
+        {on_behalf_of_content_owner: @owner_name}
+      end
+
+      def insert_playlist_item_params
+        {on_behalf_of_content_owner: @owner_name}
+      end
     end
   end
 end

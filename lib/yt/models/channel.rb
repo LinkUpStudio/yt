@@ -197,10 +197,6 @@ module Yt
       #   @return [Integer] the number of times the channel has been viewed.
       delegate :view_count, to: :statistics_set
 
-      # @!attribute [r] comment_count
-      #   @return [Integer] the number of comments for the channel.
-      delegate :comment_count, to: :statistics_set
-
       # @!attribute [r] video_count
       #   @return [Integer] the number of videos uploaded to the channel.
       delegate :video_count, to: :statistics_set
@@ -290,7 +286,8 @@ module Yt
       # @private
       # Tells `has_reports` to retrieve the reports from YouTube Analytics API
       # either as a Channel or as a Content Owner.
-      # @see https://developers.google.com/youtube/analytics/v1/reports
+      # @see https://developers.google.com/youtube/analytics/channel_reports
+      # @see https://developers.google.com/youtube/analytics/content_owner_reports
       def reports_params
         {}.tap do |params|
           if auth.owner_name

@@ -196,7 +196,7 @@ module Yt
     # - when the user has reached the quota for requests/second, and waiting
     #   for a couple of seconds might solve the connection issues.
     def run_again?
-      refresh_token_and_retry? ||
+      refresh_token_and_retry? && sleep_and_retry?(3) ||
       server_error? && sleep_and_retry?(3) ||
       exceeded_quota? && sleep_and_retry?(3)
     end
@@ -234,8 +234,12 @@ module Yt
       @retries_so_far += 1
       if (@retries_so_far < max_retries)
         @response = @http_request = @uri = nil
-        sleep 3 + (10 * @retries_so_far)
+        sleep retry_time
       end
+    end
+
+    def retry_time
+      3 + (10 * @retries_so_far)
     end
 
     # In case an authorized request responds with "Unauthorized", checks
