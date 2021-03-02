@@ -28,6 +28,30 @@ describe Yt::Channel do
     end
   end
 
+  describe '#made_for_kids?' do
+    context 'given fetching a status returns madeForKids true' do
+      let(:attrs) { {status: {"madeForKids"=>true}} }
+      it { expect(channel).to be_made_for_kids }
+    end
+
+    context 'given fetching a status returns madeForKids false' do
+      let(:attrs) { {status: {"madeForKids"=>false}} }
+      it { expect(channel).not_to be_made_for_kids }
+    end
+  end
+
+  describe '#self_declared_made_for_kids?' do
+    context 'given fetching a status returns selfDeclaredMadeForKids true' do
+      let(:attrs) { {status: {"selfDeclaredMadeForKids"=>true}} }
+      it { expect(channel).to be_self_declared_made_for_kids }
+    end
+
+    context 'given fetching a status returns selfDeclaredMadeForKids false' do
+      let(:attrs) { {status: {"selfDeclaredMadeForKids"=>false}} }
+      it { expect(channel).not_to be_self_declared_made_for_kids }
+    end
+  end
+
   describe '#thumbnail_url' do
     context 'given a snippet with thumbnails' do
       let(:attrs) { {snippet: {"thumbnails"=>{
@@ -51,13 +75,6 @@ describe Yt::Channel do
     context 'given a snippet with a timestamp' do
       let(:attrs) { {snippet: {"publishedAt"=>"2014-04-22T19:14:49.000Z"}} }
       it { expect(channel.published_at.year).to be 2014 }
-    end
-  end
-
-  describe '#comment_count' do
-    context 'given a video with comments' do
-      let(:attrs) { {statistics: {"commentCount"=>"33"}} }
-      it { expect(channel.comment_count).to be 33 }
     end
   end
 

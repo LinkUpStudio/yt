@@ -65,15 +65,21 @@ module Yt
       # @param [Hash] params the metadata to add to the uploaded video.
       # @option params [String] :title The video’s title.
       # @option params [String] :description The video’s description.
-      # @option params [Array<String>] :title The video’s tags.
+      # @option params [Array<String>] :tags The video’s tags.
       # @option params [String] :privacy_status The video’s privacy status.
+      # @option params [Boolean] :self_declared_made_for_kids The video’s made for kids self-declaration.
       # @return [Yt::Models::Video] the newly uploaded video.
       def upload_video(path_or_url, params = {})
         file = open path_or_url, 'rb'
         session = resumable_sessions.insert file.size, upload_body(params)
 
         session.update(body: file) do |data|
-          Yt::Video.new id: data['id'], snippet: data['snippet'], status: data['privacyStatus'], auth: self
+          Yt::Video.new(
+            id: data['id'],
+            snippet: data['snippet'],
+            status: data['status'],
+            auth: self
+          )
         end
       end
 
@@ -192,6 +198,10 @@ module Yt
         {mine: true}
       end
 
+      def playlist_items_params
+        {}
+      end
+
       # @private
       # Tells `has_many :resumable_sessions` what path to hit to upload a file.
       def upload_path
@@ -213,8 +223,12 @@ module Yt
           snippet[:categoryId] = snippet.delete(:category_id) if snippet[:category_id]
           body[:snippet] = snippet if snippet.any?
 
-          status = params[:privacy_status]
-          body[:status] = {privacyStatus: status} if status
+          privacy_status = params[:privacy_status]
+          self_declared_made_for_kids = params[:self_declared_made_for_kids]
+
+          body[:status] = {}
+          body[:status][:privacyStatus] = privacy_status if privacy_status
+          body[:status][:selfDeclaredMadeForKids] = self_declared_made_for_kids unless self_declared_made_for_kids.nil?
         end
       end
 
@@ -222,6 +236,22 @@ module Yt
       # Tells `has_many :resumable_sessions` what type of file can be uploaded.
       def upload_content_type
         'video/*'
+      end
+
+      def update_video_params
+        {}
+      end
+
+      def update_playlist_params
+        {}
+      end
+
+      def upload_thumbnail_params
+        {}
+      end
+
+      def insert_playlist_item_params
+        {}
       end
     end
   end

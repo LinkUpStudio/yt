@@ -29,6 +29,25 @@ module Yt
       #   @return [Time] the date and time that the channel was created.
       delegate :published_at, to: :snippet
 
+    ### STATUS ###
+
+      # @!attribute [r] made_for_kids?
+      #   @return [Boolean, nil] This value indicates whether the channel is
+      #     designated as child-directed, and it contains the current "made for
+      #     kids" status of the channel.
+      def made_for_kids?
+        status.made_for_kids
+      end
+
+      # @!attribute [r] self_declared_made_for_kids?
+      #   @return [Boolean, nil] In a channels.update request, this property
+      #     allows the channel owner to designate the channel as
+      #     child-directed. The property value is only returned if the channel
+      #     owner authorized the API request.
+      def self_declared_made_for_kids?
+        status.self_declared_made_for_kids
+      end
+
     ### SUBSCRIPTION ###
 
       has_one :subscription
@@ -197,10 +216,6 @@ module Yt
       #   @return [Integer] the number of times the channel has been viewed.
       delegate :view_count, to: :statistics_set
 
-      # @!attribute [r] comment_count
-      #   @return [Integer] the number of comments for the channel.
-      delegate :comment_count, to: :statistics_set
-
       # @!attribute [r] video_count
       #   @return [Integer] the number of videos uploaded to the channel.
       delegate :video_count, to: :statistics_set
@@ -283,7 +298,8 @@ module Yt
       # @private
       # Tells `has_reports` to retrieve the reports from YouTube Analytics API
       # either as a Channel or as a Content Owner.
-      # @see https://developers.google.com/youtube/analytics/v1/reports
+      # @see https://developers.google.com/youtube/analytics/channel_reports
+      # @see https://developers.google.com/youtube/analytics/content_owner_reports
       def reports_params
         {}.tap do |params|
           if auth.owner_name

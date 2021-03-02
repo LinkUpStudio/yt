@@ -6,6 +6,76 @@ For more information about changelogs, check
 [Keep a Changelog](http://keepachangelog.com) and
 [Vandamme](http://tech-angels.github.io/vandamme).
 
+## 0.33.4 - 2021-01-15
+
+* [REMOVAL] remove retry for quota errors
+
+## 0.33.3 - 2020-11-17
+
+* [BUGFIX] require the `URL` model when requiring `yt`
+* [BUGFIX] handle passing in a `nil` id
+
+## 0.33.2 - 2020-11-11
+
+* [BUGFIX] No more pages when page token is an empty string, per YouTube change.
+
+## 0.33.1 - 2020-10-19
+
+* [BUGFIX] Only retry once when exchanging a refresh token
+
+## 0.33.0 - 2020-04-10
+
+If your code calls reports methods such as `views`, `likes`, or `reports`,
+do not include `by: :week` option since `7DayTotals` dimension will no longer be
+supported by YouTube API as of [April 15, 2020](https://developers.google.com/youtube/analytics/revision_history#october-15,-2019).
+
+Use `by: :day` option instead and add up the numbers from each day.
+
+If you keep using `by: :week` option after this change it will raise an error
+(before the gem upgrade) or it will run with `day` dimension instead (after
+the gem upgrade, like any other random input).
+
+* [REMOVAL] Remove `by: :week` option for reports.
+* [FEATURE] Add back the option of initializing a resource by its URL.
+* [BUGFIX] Limit retries on refreshing tokens
+
+**Breaking change**
+
+If your code is using constant `Yt::URL::CHANNEL_PATTERNS` etc then it's moved to `Yt::Resource::CHANNEL_PATTERNS`, `Yt::Resource::VIDEO_PATTERNS`, and `Yt::Resource::PLAYLIST_PATTERNS`.
+
+## 0.32.6 - 2020-02-07
+
+* [FEATURE] Allow partnered channels to delete playlist item.
+* [FEATURE] Allow partnered channels to update video.
+* [FEATURE] Allow partnered channels to update playlist.
+* [FEATURE] Allow partnered channels to upload thumbnail.
+* [FEATURE] Allow partnered channels to create playlist item.
+
+## 0.32.5 - 2019-11-06
+
+* [BUGFIX] Fix `MatchPolicy#update` and `Asset#update` by using `PUT` instead of `PATCH`
+* Update `bin/yt` file to keep `yt info` command work
+
+## 0.32.4 - 2019-06-26
+
+* [FEATURE] Add `ownership_effective` method to access asset ownership ("effective") via the asset object.
+* [FEATURE] List content owners of others with `content_owner.content_owners`
+* [FEATURE] Add `match_info` to insert claim request.
+* [FEATURE] Add `upload_reference_file` method for Reference file upload (thank you @jcohenho)
+* [FEATURE] Get one asset [by request](https://developers.google.com/youtube/partner/docs/v1/assets/get) (thank you @jcohenho)
+* [FEATURE] Add `update` method to Yt::Claim (thank you @jcohenho)
+
+## 0.32.3 - 2019-03-15
+
+* [ENHANCEMENT] Add `Yt::URL` to get id, kind, and its resource (channel, video, playlist)
+* [BUGFIX] Fix `subscription.insert` by adding a parameter
+* [FEATURE] Add `file_name` attribute to `Yt::FileDetail` model
+
+## 0.32.2 - 2018-05-25
+
+* Use YouTube Analytics API v2 instead of v1. See announcement of v1 deprecation
+https://developers.google.com/youtube/analytics/revision_history#april-26-2018
+
 ## 0.32.1 - 2017-08-14
 
 * [FEATURE] Add `Yt::ContentOwner#bulk_report_jobs`
@@ -437,11 +507,11 @@ If your code expects reports to return results **by day** then you **must** add
 the `by: :day` option to your report method. The new default is `by: :range`.
 For instance `channel.views` would return
 
-  {Wed, 8 May 2014 => 12.4, Thu, 9 May 2014 => 3.2, Fri, 10 May 2014 => …}
+    {Wed, 8 May 2014 => 12.4, Thu, 9 May 2014 => 3.2, Fri, 10 May 2014 => …}
 
 and now returns the same as calling `channel.views by: :range`:
 
-  {total: 3450}
+    {total: 3450}
 
 Additionally, if you expect reports **by day** then you **must** specify the
 `:since` option to your report method. Previously, this value was set to
