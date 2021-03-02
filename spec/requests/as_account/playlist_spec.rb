@@ -3,11 +3,11 @@
 require 'spec_helper'
 require 'yt/models/playlist'
 
-describe Yt::Playlist, :device_app do
-  subject(:playlist) { Yt::Playlist.new id: id, auth: $account }
+describe Yt::Playlist, :device_app, :vcr do
+  subject(:playlist) { Yt::Playlist.new id: id, auth: test_account }
 
   context 'given an existing playlist' do
-    let(:id) { 'PLSWYkYzOrPMT9pJG5St5G0WDalhRzGkU4' }
+    let(:id) { 'PLpjK416fmKwQlQ0KvTWFmXZZa3d4IO2ro' } # from YouTube Creators
 
     it 'returns valid metadata' do
       expect(playlist.title).to be_a String
@@ -56,7 +56,7 @@ describe Yt::Playlist, :device_app do
   end
 
   context 'given someone else’s playlist' do
-    let(:id) { 'PLSWYkYzOrPMT9pJG5St5G0WDalhRzGkU4' }
+    let(:id) { 'PLpjK416fmKwQlQ0KvTWFmXZZa3d4IO2ro' } # from YouTube Creators
     let(:video_id) { '9bZkp7q19f0' }
 
     it { expect{playlist.delete}.to fail.with 'playlistForbidden' }
@@ -66,53 +66,50 @@ describe Yt::Playlist, :device_app do
   end
 
   context 'given one of my own playlists that I want to delete' do
-    before(:all) { @my_playlist = $account.create_playlist title: "Yt Test Delete Playlist #{rand}" }
-    let(:id) { @my_playlist.id }
+    let(:id) { 'PLbj-IDe6g8vuN_pRohu-634bvJKZzxWht' }
 
     it { expect(playlist.delete).to be true }
   end
 
   context 'given one of my own playlists that I want to update' do
-    before(:all) { @my_playlist = $account.create_playlist title: "Yt Test Update Playlist #{rand}" }
-    after(:all) { @my_playlist.delete }
-    let(:id) { @my_playlist.id }
-    let!(:old_title) { @my_playlist.title }
-    let!(:old_privacy_status) { @my_playlist.privacy_status }
-    let(:update) { @my_playlist.update attrs }
+    let(:id) { 'PLbj-IDe6g8vtax1SakLEwOdOEv-nvjiy0' }
+    let!(:old_title) { playlist.title }
+    let!(:old_privacy_status) { playlist.privacy_status }
+    let(:update) { playlist.update attrs }
 
     context 'given I update the title' do
       # NOTE: The use of UTF-8 characters is to test that we can pass up to
       # 50 characters, independently of their representation
-      let(:attrs) { {title: "Yt Example Update Playlist #{rand} - ®•♡❥❦❧☙"} }
+      let(:attrs) { {title: "Yt Example Update Playlist - ®•♡❥❦❧☙"} }
 
       specify 'only updates the title' do
         expect(update).to be true
-        expect(@my_playlist.title).not_to eq old_title
-        expect(@my_playlist.privacy_status).to eq old_privacy_status
+        expect(playlist.title).not_to eq old_title
+        expect(playlist.privacy_status).to eq old_privacy_status
       end
     end
 
     context 'given I update the description' do
-      let!(:old_description) { @my_playlist.description }
-      let(:attrs) { {description: "Yt Example Description  #{rand} - ®•♡❥❦❧☙"} }
+      let!(:old_description) { playlist.description }
+      let(:attrs) { {description: "Yt Example Description - ®•♡❥❦❧☙"} }
 
       specify 'only updates the description' do
         expect(update).to be true
-        expect(@my_playlist.description).not_to eq old_description
-        expect(@my_playlist.title).to eq old_title
-        expect(@my_playlist.privacy_status).to eq old_privacy_status
+        expect(playlist.description).not_to eq old_description
+        expect(playlist.title).to eq old_title
+        expect(playlist.privacy_status).to eq old_privacy_status
       end
     end
 
     context 'given I update the tags' do
-      let!(:old_tags) { @my_playlist.tags }
-      let(:attrs) { {tags: ["Yt Test Tag #{rand}"]} }
+      let!(:old_tags) { playlist.tags }
+      let(:attrs) { {tags: ["Yt Test Tag"]} }
 
       specify 'only updates the tag' do
         expect(update).to be true
-        expect(@my_playlist.tags).not_to eq old_tags
-        expect(@my_playlist.title).to eq old_title
-        expect(@my_playlist.privacy_status).to eq old_privacy_status
+        expect(playlist.tags).not_to eq old_tags
+        expect(playlist.title).to eq old_title
+        expect(playlist.privacy_status).to eq old_privacy_status
       end
     end
 
@@ -135,8 +132,8 @@ describe Yt::Playlist, :device_app do
 
         specify 'only updates the privacy status' do
           expect(update).to be true
-          expect(@my_playlist.privacy_status).not_to eq old_privacy_status
-          expect(@my_playlist.title).to eq old_title
+          expect(playlist.privacy_status).not_to eq old_privacy_status
+          expect(playlist.title).to eq old_title
         end
       end
 
@@ -145,35 +142,21 @@ describe Yt::Playlist, :device_app do
 
         specify 'only updates the privacy status' do
           expect(update).to be true
-          expect(@my_playlist.privacy_status).not_to eq old_privacy_status
-          expect(@my_playlist.title).to eq old_title
+          expect(playlist.privacy_status).not_to eq old_privacy_status
+          expect(playlist.title).to eq old_title
         end
       end
     end
 
     context 'given an existing video' do
-      let(:video_id) { '9bZkp7q19f0' }
+      let(:video_id) { '9bZkp7q19f0' } # Gangnam Style
 
       describe 'can be added' do
         it { expect(playlist.add_video video_id).to be_a Yt::PlaylistItem }
-        it { expect{playlist.add_video video_id}.to change{playlist.playlist_items.count}.by(1) }
+        it { expect{playlist.add_video video_id}.to change{ playlist.playlist_items.count}.by(1) }
         it { expect(playlist.add_video! video_id).to be_a Yt::PlaylistItem }
         it { expect{playlist.add_video! video_id}.to change{playlist.playlist_items.count}.by(1) }
         it { expect(playlist.add_video(video_id, position: 0).position).to be 0 }
-      end
-
-      # NOTE: This test sounds redundant, but it’s actually a reflection of
-      # another irrational behavior of YouTube API. In short, if you add a new
-      # video to a playlist, the returned item does not have the "position"
-      # information. You need an extra call to get it. When YouTube fixes this
-      # behavior, this test (and related code) will go away.
-      describe 'adding the video' do
-        let(:item) { playlist.add_video video_id }
-
-        specify 'returns an item without its position' do
-          expect(item.snippet).not_to be_complete
-          expect(item.position).not_to be_nil # after reloading
-        end
       end
 
       describe 'can be removed' do
@@ -206,7 +189,11 @@ describe Yt::Playlist, :device_app do
   end
 
   context 'given one of my own playlists that I want to get reports for' do
-    let(:id) { $account.channel.playlists.first.id }
+    let(:id) { test_account.channel.playlists.first.id }
+
+    before do
+      allow(Date).to receive(:today).and_return(Date.new(2020, 2, 5))
+    end
 
     it 'returns valid reports for playlist-related metrics' do
       expect{playlist.views}.not_to raise_error

@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'yt/models/content_owner'
+require 'yt/models/match_policy'
 
 describe Yt::ContentOwner, :partner do
   describe '.partnered_channels' do
@@ -264,6 +265,26 @@ describe Yt::ContentOwner, :partner do
         it { expect(reference).not_to be }
       end
     end
+
+    describe '.upload_reference_file' do
+      let(:asset) { Yt::Asset.new id: ENV['YT_TEST_PARTNER_ASSET_ID'], auth: $content_owner }
+      let(:match_policy) { Yt::MatchPolicy.new asset_id: ENV['YT_TEST_PARTNER_ASSET_ID'], auth: $content_owner }
+
+      let(:upload_params) { {asset_id: asset.id, content_type: 'video'} }
+      let(:reference) { $content_owner.upload_reference_file path_or_url, upload_params }
+      after { reference.delete }
+
+      before do
+        asset.ownership.update(assetId: asset.id) && asset.ownership.obtain!
+        match_policy.update policy_id: ENV['YT_TEST_PARTNER_POLICY_ID']
+      end
+
+      context 'given the URL of a remote video file' do
+        let(:path_or_url) { ENV['YT_REMOTE_VIDEO_URL'] }
+
+        it { expect(reference).to be_a Yt::Reference }
+      end
+    end
   end
 
   describe '.policies' do
@@ -305,16 +326,6 @@ describe Yt::ContentOwner, :partner do
     end
   end
 
-  describe '.bulk_report_jobs' do
-    describe 'given the content owner has bulk report jobs' do
-      let(:job) { $content_owner.bulk_report_jobs.first }
-
-      it 'returns valid job' do
-        expect(job.id).to be_a String
-        expect(job.report_type_id).to be_a String
-      end
-    end
-  end
   # @note: The following test works, but YouTube API endpoint to mark
   #   an asset as 'invalid' (soft-delete) does not work, and apparently
   #   there is no way to update the status of a asset.
@@ -326,4 +337,34 @@ describe Yt::ContentOwner, :partner do
   #   after { @asset.delete } # This does not seem to work
   #   it { expect(@asset).to be_a Yt::Asset }
   # end
+
+  describe '.bulk_report_jobs' do
+    describe 'given the content owner has bulk report jobs' do
+      let(:job) { $content_owner.bulk_report_jobs.first }
+
+      it 'returns valid job' do
+        expect(job.id).to be_a String
+        expect(job.report_type_id).to be_a String
+      end
+    end
+  end
+
+  describe '.content_owners' do
+    describe '.where(id: content_owner_ids)' do
+      let(:content_owner_a) { $content_owner.content_owners.where(id: content_owner_ids).first }
+
+      context 'given valid content owner names' do
+        let(:content_owner_ids) { 'a8MUrfnFEzBX3uLQepd5mg,GIfKLveZoYetfSFgvG2VtQ' }
+
+        it 'returns valid content owner' do
+          expect(content_owner_a.display_name).to be_a String
+        end
+      end
+
+      context 'given an unknown content owner ID' do
+        let(:content_owner_ids) { '--not-a-valid-owner-id--' }
+        it { expect(content_owner_a).not_to be }
+      end
+    end
+  end
 end

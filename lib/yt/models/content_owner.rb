@@ -48,6 +48,22 @@ module Yt
         @display_name = options[:display_name]
       end
 
+      # Uploads a reference file to YouTube.
+      # @param [String] path_or_url is the video or audio file to upload. Can either be the
+      #   path of a local file or the URL of a remote file.
+      # @param [Hash] params the metadata to add to the uploaded reference.
+      # @option params [String] :asset_id The id of the asset the uploaded reference belongs to.
+      # @option params [String] :content_type The type of content being uploaded.
+      # @return [Yt::Models::Reference] the newly uploaded reference.
+      def upload_reference_file(path_or_url, params = {})
+        file = open path_or_url, 'rb'
+        session = resumable_sessions.insert file.size, params
+
+        session.update(body: file) do |data|
+          Yt::Reference.new id: data['id'], data: data, auth: self
+        end
+      end
+
       def create_reference(params = {})
         references.insert params
       end
@@ -63,6 +79,12 @@ module Yt
     ### PRIVATE API ###
 
       # @private
+      # Tells `has_many :resumable_sessions` what path to hit to upload a file.
+      def upload_path
+        '/upload/youtube/partner/v1/references'
+      end
+
+      # @private
       # Tells `has_many :videos` that account.videos should return all the
       # videos *on behalf of* the content owner (public, private, unlisted).
       def videos_params
@@ -70,9 +92,36 @@ module Yt
       end
 
       # @private
+      # Tells `has_many :resumable_sessions` what params are set for the object
+      # associated to the uploaded file.
+      def upload_params
+        {part: 'snippet,status', on_behalf_of_content_owner: self.owner_name}
+      end
+
+      # @private
       # Tells `has_many :video_groups` that content_owner.video_groups should
       # return all the video-groups *on behalf of* the content owner
       def video_groups_params
+        {on_behalf_of_content_owner: @owner_name}
+      end
+
+      def playlist_items_params
+        {on_behalf_of_content_owner: @owner_name}
+      end
+
+      def update_video_params
+        {on_behalf_of_content_owner: @owner_name}
+      end
+
+      def update_playlist_params
+        {on_behalf_of_content_owner: @owner_name}
+      end
+
+      def upload_thumbnail_params
+        {on_behalf_of_content_owner: @owner_name}
+      end
+
+      def insert_playlist_item_params
         {on_behalf_of_content_owner: @owner_name}
       end
     end

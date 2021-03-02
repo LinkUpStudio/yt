@@ -6,7 +6,6 @@ module Yt
     class Reports < Base
       DIMENSIONS = Hash.new({name: 'day', parse: ->(day, *values) { @metrics.keys.zip(values.map{|v| {Date.iso8601(day) => v}}).to_h} }).tap do |hash|
         hash[:month] = {name: 'month', parse: ->(month, *values) { @metrics.keys.zip(values.map{|v| {Range.new(Date.strptime(month, '%Y-%m').beginning_of_month, Date.strptime(month, '%Y-%m').end_of_month) => v} }).to_h} }
-        hash[:week] = {name: '7DayTotals', parse: ->(last_day_of_week, *values) { @metrics.keys.zip(values.map{|v| {Range.new(Date.strptime(last_day_of_week) - 6, Date.strptime(last_day_of_week)) => v} }).to_h} }
         hash[:range] = {parse: ->(*values) { @metrics.keys.zip(values.map{|v| {total: v}}).to_h } }
         hash[:traffic_source] = {name: 'insightTrafficSourceType', parse: ->(source, *values) { @metrics.keys.zip(values.map{|v| {TRAFFIC_SOURCES.key(source) => v}}).to_h} }
         hash[:playback_location] = {name: 'insightPlaybackLocationType', parse: ->(location, *values) { @metrics.keys.zip(values.map{|v| {PLAYBACK_LOCATIONS.key(location) => v}}).to_h} }
@@ -112,7 +111,8 @@ module Yt
         wii: 'WII',
         windows: 'WINDOWS',
         windows_mobile: 'WINDOWS_MOBILE',
-        xbox: 'XBOX'
+        xbox: 'XBOX',
+        kaios: 'KAIOS'
       }
 
       attr_writer :metrics
@@ -139,11 +139,6 @@ module Yt
           end
           if dimension == :month
             hash = hash.transform_values{|h| h.sort_by{|range, v| range.first}.to_h}
-          elsif dimension == :week
-            hash = hash.transform_values do |h|
-              h.select{|range, v| range.last.wday == days_range.last.wday}.
-              sort_by{|range, v| range.first}.to_h
-            end
           elsif dimension == :day
             hash = hash.transform_values{|h| h.sort_by{|day, v| day}.to_h}
           elsif dimension.in? [:traffic_source, :country, :state, :playback_location, :device_type, :operating_system, :subscribed_status]
@@ -158,10 +153,14 @@ module Yt
       # same query is a workaround that works and can hardly cause any damage.
       # Similarly, once in while YouTube responds with a random 503 error.
       rescue Yt::Error => e
-        (max_retries > 0) && rescue?(e) ? sleep(3) && within(days_range, country, state, dimension, videos, historical, max_retries - 1) : raise
+        (max_retries > 0) && rescue?(e) ? sleep(retry_time) && within(days_range, country, state, dimension, videos, historical, max_retries - 1) : raise
       end
 
     private
+
+      def retry_time
+        3
+      end
 
       def type_cast(value, type)
         case [type]
@@ -177,7 +176,8 @@ module Yt
       # @see https://developers.google.com/youtube/analytics/v1/content_owner_reports
       def list_params
         super.tap do |params|
-          params[:path] = '/youtube/analytics/v1/reports'
+          params[:host] = 'youtubeanalytics.googleapis.com'
+          params[:path] = '/v2/reports'
           params[:params] = reports_params
           params[:camelize_params] = false
         end
@@ -185,13 +185,13 @@ module Yt
 
       def reports_params
         @parent.reports_params.tap do |params|
-          params['start-date'] = @days_range.begin
-          params['end-date'] = @days_range.end
+          params['startDate'] = @days_range.begin
+          params['endDate'] = @days_range.end
           params['metrics'] = @metrics.keys.join(',').to_s.camelize(:lower)
           params['dimensions'] = DIMENSIONS[@dimension][:name] unless @dimension == :range
-          params['include-historical-channel-data'] = @historical if @historical
-          params['max-results'] = 50 if @dimension.in? [:playlist, :video]
-          params['max-results'] = 25 if @dimension.in? [:embedded_player_location, :related_video, :search_term, :referrer]
+          params['includeHistoricalChannelData'] = @historical if @historical
+          params['maxResults'] = 50 if @dimension.in? [:playlist, :video]
+          params['maxResults'] = 25 if @dimension.in? [:embedded_player_location, :related_video, :search_term, :referrer]
           if @dimension.in? [:video, :playlist, :embedded_player_location, :related_video, :search_term, :referrer]
             if @metrics.keys == [:estimated_revenue, :estimated_minutes_watched]
               params['sort'] = '-estimatedRevenue'
