@@ -17,7 +17,7 @@ module Yt
 
       def update(attributes = {})
         underscore_keys! attributes
-        do_update body: attributes
+        do_patch body: attributes
         true
       end
 
