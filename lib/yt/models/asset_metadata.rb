@@ -33,6 +33,16 @@ module Yt
       def description
         @data['description']
       end
+
+      # @return [String] the ISRC of asset
+      def isrc
+        @data['isrc']
+      end
+
+      # @return [String] the UPC of asset
+      def upc
+        @data['upc']
+      end
     end
   end
 end
