@@ -2,6 +2,7 @@ require 'yt/version'
 require 'yt/constants/geography'
 require 'yt/models/account'
 require 'yt/models/branding_setting'
+require 'yt/models/asset_relationship'
 require 'yt/models/channel'
 require 'yt/models/claim'
 require 'yt/models/claim_history'
@@ -16,6 +17,7 @@ require 'yt/models/comment_thread'
 require 'yt/models/ownership'
 require 'yt/models/advertising_options_set'
 require 'yt/models/caption'
+require 'yt/models/whitelist'
 
 # An object-oriented Ruby client for YouTube.
 # Helps creating applications that need to interact with YouTube objects.

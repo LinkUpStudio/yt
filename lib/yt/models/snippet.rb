@@ -37,6 +37,7 @@ module Yt
       has_attribute :parent_id
       has_attribute :like_count, type: Integer
       has_attribute :updated_at, type: Time
+      has_attribute :custom_url
 
       has_attribute :last_updated, type: Time
       has_attribute :language

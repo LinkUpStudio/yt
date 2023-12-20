@@ -17,7 +17,7 @@ module Yt
 
       def update(attributes = {})
         underscore_keys! attributes
-        do_update body: attributes
+        do_patch body: attributes
         true
       end
 
@@ -37,6 +37,14 @@ module Yt
 
       def ownership_effective
         @ownership_effective ||= Yt::Models::Ownership.new data: @data.fetch('ownershipEffective', {})
+      end
+
+      def match_policy_mine
+        @match_policy_mine ||= Yt::Models::MatchPolicy.new data: @data.fetch('matchPolicyMine', {})
+      end
+
+      def match_policy_effective
+        @match_policy_effective ||= Yt::Models::MatchPolicy.new data: @data.fetch('matchPolicyEffective', {})
       end
 
       # Soft-deletes the asset.
@@ -100,6 +108,8 @@ module Yt
       # def pending?
       #   status == 'pending'
       # end
+
+      has_many :asset_relationships
 
     private
 

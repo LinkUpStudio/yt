@@ -40,6 +40,8 @@ module Yt
       #     content owner.
       has_many :bulk_report_jobs
 
+      has_many :whitelists
+
       def initialize(options = {})
         super options
         @owner_name = options[:owner_name]

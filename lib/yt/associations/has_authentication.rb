@@ -33,6 +33,8 @@ module Yt
         @scopes = options[:scopes]
         @authentication = options[:authentication]
         @state = options[:state]
+        @client_id = options[:client_id]
+        @client_secret = options[:client_secret]
       end
 
       def auth
@@ -237,11 +239,11 @@ module Yt
       end
 
       def client_id
-        Yt.configuration.client_id
+        @client_id || Yt.configuration.client_id
       end
 
       def client_secret
-        Yt.configuration.client_secret
+        @client_secret || Yt.configuration.client_secret
       end
     end
   end

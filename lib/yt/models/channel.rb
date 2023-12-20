@@ -29,6 +29,10 @@ module Yt
       #   @return [Time] the date and time that the channel was created.
       delegate :published_at, to: :snippet
 
+      # @!attribute [r] custom_url
+      #   @return [String] the channel’s cusom name.
+      delegate :custom_url, to: :snippet
+
     ### STATUS ###
 
       # @!attribute [r] made_for_kids?
