@@ -223,6 +223,21 @@ module Yt
         status.embeddable
       end
 
+      #   @return [Boolean, nil] This value indicates whether the video is
+      #     designated as child-directed, and it contains the current "made for
+      #     kids" status of the video.
+      def made_for_kids?
+        status.made_for_kids
+      end
+
+      #   @return [Boolean, nil] In a videos.insert or videos.update request,
+      #     this property allows the channel owner to designate the video as
+      #     being child-directed. In a videos.list request, the property value
+      #     is only returned if the channel owner authorized the API request.
+      def self_declared_made_for_kids?
+        status.self_declared_made_for_kids
+      end
+
     ### CONTENT DETAILS ###
 
       has_one :content_detail
@@ -518,6 +533,10 @@ module Yt
       #     player that will play the video.
       delegate :embed_html, to: :player
 
+    ### CAPTION ###
+
+      has_many :captions
+
     ### ACTIONS (UPLOAD, UPDATE, DELETE) ###
 
       # Uploads a thumbnail
@@ -527,7 +546,7 @@ module Yt
       # @raise [Yt::Errors::RequestError] if path_or_url is not a valid path
       #   or URL.
       def upload_thumbnail(path_or_url)
-        file = open(path_or_url, 'rb') rescue StringIO.new
+        file = URI.open(path_or_url) rescue StringIO.new
         session = resumable_sessions.insert file.size
 
         session.update(body: file) do |data|
@@ -667,7 +686,7 @@ module Yt
         snippet_keys = [:title, :description, :tags, :category_id]
         snippet = {keys: snippet_keys, sanitize_brackets: true}
         status_keys = [:privacy_status, :embeddable, :license,
-          :public_stats_viewable, :publish_at]
+          :public_stats_viewable, :publish_at, :self_declared_made_for_kids]
         {snippet: snippet, status: {keys: status_keys}}
       end
 

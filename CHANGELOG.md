@@ -6,6 +6,23 @@ For more information about changelogs, check
 [Keep a Changelog](http://keepachangelog.com) and
 [Vandamme](http://tech-angels.github.io/vandamme).
 
+## 0.33.4 - 2021-01-15
+
+* [REMOVAL] remove retry for quota errors
+
+## 0.33.3 - 2020-11-17
+
+* [BUGFIX] require the `URL` model when requiring `yt`
+* [BUGFIX] handle passing in a `nil` id
+
+## 0.33.2 - 2020-11-11
+
+* [BUGFIX] No more pages when page token is an empty string, per YouTube change.
+
+## 0.33.1 - 2020-10-19
+
+* [BUGFIX] Only retry once when exchanging a refresh token
+
 ## 0.33.0 - 2020-04-10
 
 If your code calls reports methods such as `views`, `likes`, or `reports`,
