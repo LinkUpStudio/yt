@@ -48,7 +48,7 @@ module Yt
 
       def use_list_endpoint?
         @where_params ||= {}
-        (@where_params.keys & %i[id for_username]).any?
+        (@where_params.keys & %i[id for_username for_handle]).any?
       end
     end
   end
